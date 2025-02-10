@@ -4,7 +4,7 @@
 This solution provides automated detection and response to exposed AWS access key incidents. It uses AWS Health events to trigger a workflow that analyzes the exposure, sends detailed notifications, and optionally disables compromised access keys automatically.
 
 ## Architecture
-![Architecture Diagram]
+![Architecture Diagram](Architecture.png)
 
 ### Components
 1. **AWS EventBridge Rule**
@@ -49,8 +49,8 @@ This solution provides automated detection and response to exposed AWS access ke
 
 ### 1. Clone the Repository
 ```
-git clone [repository-url]
-cd aws-access-key-exposure-handler
+git clone https://github.com/aws-samples/notify-and-remediate-exposed-access-key.git
+cd notify-and-remediate-exposed-access-key
 ```
 
 ### 2. Configure Parameters
