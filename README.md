@@ -182,29 +182,3 @@ aws stepfunctions list-executions --state-machine-arn <state-machine-arn>
 3. Submit pull request
 4. Follow coding standards
 
-## License
-[Specify License]
-
-## Support
-[Provide Support Information]
-```
-
-This README provides:
-1. Clear deployment instructions
-2. Configuration options
-3. Testing procedures
-4. Troubleshooting guides
-5. Security considerations
-6. Monitoring recommendations
-
-Remember to:
-1. Add actual repository URL
-2. Include architecture diagram
-3. Specify license details
-4. Add support contact information
-5. Update any environment-specific instructions
-
-The README should be kept up-to-date with any changes to the solution's architecture or deployment process.
-
----
-Answer from Perplexity: pplx.ai/share
