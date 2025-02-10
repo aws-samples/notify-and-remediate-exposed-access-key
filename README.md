@@ -131,26 +131,6 @@ aws stepfunctions list-executions --state-machine-arn <state-machine-arn>
 }
 ```
 
-## Monitoring and Maintenance
-
-### CloudWatch Logs
-- Monitor Lambda function logs
-- Check Step Functions execution logs
-- Review EventBridge rule triggers
-
-### Alerts
-- Configure CloudWatch alarms for:
-  - Lambda function errors
-  - Step Functions failures
-  - Failed remediation attempts
-
-### Cost Considerations
-- Lambda invocations
-- Step Functions state transitions
-- CloudTrail lookups
-- Bedrock API calls
-- SES email sending
-
 ## Security Considerations
 1. IAM permissions follow least privilege principle
 2. SES configuration requires proper email verification
