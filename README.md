@@ -151,5 +151,5 @@ Both Lambda functions send HTML-formatted emails:
 1. Fork the repository
 2. Create feature branch
 3. Submit pull request
-4. Follow coding standards
+4. Follow coding standard
 
