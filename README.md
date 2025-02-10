@@ -102,16 +102,7 @@ Both Lambda functions send HTML-formatted emails:
 
 ## Testing
 
-### 1. Manual Testing
-```
-# Generate test event
-aws events put-events --entries file://test-event.json
-
-# Check Step Functions execution
-aws stepfunctions list-executions --state-machine-arn <state-machine-arn>
-```
-
-### 2. Test Event Template
+### 1. Test Event Template
 ```
 {
   "source": "aws.health",
