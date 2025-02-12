@@ -50,24 +50,22 @@ def get_html_template(content):
     </html>
     """
 def analyze_cloudtrail_events(access_key_id, start_time=None):
-    """Analyze CloudTrail events across all active regions"""
     results = {
-        'api_counts': defaultdict(lambda: defaultdict(int)),
-        'total_events': 0,
-        'errors': []
+        'events': [],
+        'total_events': 0
     }
 
     # Get all active regions
     ec2 = boto3.client('ec2')
     regions = [region['RegionName'] for region in ec2.describe_regions()['Regions']]
     regions.append('us-east-1')  # Ensure IAM events are captured
-    print (regions)
+    
     if not start_time:
         start_time = datetime.now(timezone.utc) - timedelta(days=7)
-        print(start_time)
+
     for region in set(regions):
         try:
-            cloudtrail = boto3.client('cloudtrail',region_name=region)
+            cloudtrail = boto3.client('cloudtrail', region_name=region)
             paginator = cloudtrail.get_paginator('lookup_events')
             
             for page in paginator.paginate(
@@ -80,11 +78,18 @@ def analyze_cloudtrail_events(access_key_id, start_time=None):
                 for event in page.get('Events', []):
                     event_data = json.loads(event.get('CloudTrailEvent', '{}'))
                     api_name = event_data.get('eventName', 'Unknown')
-                    results['api_counts'][region][api_name] += 1
+                    source_ip = event_data.get('sourceIPAddress', 'Unknown')
+                    
+                    # Add event details to results
+                    results['events'].append({
+                        'region': region,
+                        'api_name': api_name,
+                        'source_ip': source_ip
+                    })
                     results['total_events'] += 1
         
         except Exception as e:
-            results['errors'].append(f"Region {region} error: {str(e)}")
+            print(f"Error in region {region}: {str(e)}")
 
     return results
 
@@ -124,8 +129,13 @@ def get_security_recommendations(bedrock_client, incident_details):
 def lambda_handler(event, context):
     health_event = event.get('event', {})
     detail = health_event.get('detail', {})
-    user = detail['affectedEntities'][0].get('entityValue', 'N/A')
-    access_key_id = detail['affectedEntities'][0]['tags']['accessKeyId']
+    
+    # Extract information from the event
+    access_key_id = detail['eventMetadata'].get('publicKey', 'N/A')
+    user = detail['eventMetadata'].get('userName', 'N/A')
+    account_id = detail['eventMetadata'].get('accountId', 'N/A')
+    exposed_url = detail['eventMetadata'].get('exposedUrl', 'N/A')
+    event_time = detail.get('startTime', 'N/A')
     
     event_summary = analyze_cloudtrail_events(access_key_id)
 
@@ -137,6 +147,9 @@ def lambda_handler(event, context):
     Access Key Exposure Detected!
     Key ID: {access_key_id}
     User: {user}
+    Account ID: {account_id}
+    Exposure Source: {exposed_url}
+    Detection Time: {event_time}
     """
     
     try:
@@ -159,7 +172,7 @@ def lambda_handler(event, context):
     # Get security recommendations
     security_recommendations = get_security_recommendations(bedrock, incident_summary)
 
-    # Update email content to include regional analysis
+    # Email content
     current_time = datetime.now(timezone.utc)
     email_content = f"""
         <div class="header">
@@ -176,25 +189,40 @@ def lambda_handler(event, context):
             <table>
                 <tr><th>Access Key ID</th><td>{access_key_id}</td></tr>
                 <tr><th>Affected User</th><td>{user}</td></tr>
+                <tr><th>AWS Account ID</th><td>{account_id}</td></tr>
+                <tr><th>Exposure Source</th><td>{exposed_url}</td></tr>
+                <tr><th>Event Time</th><td>{event_time}</td></tr>
                 <tr><th>Detection Time</th><td>{current_time.strftime('%Y-%m-%d %H:%M:%S UTC')}</td></tr>
             </table>
         </div>
-        
+
         <div class="section">
-            <h2>Last 7 Days API Activity Analysis</h2>
+            <h2>API Activity Analysis (Last 1 Day)</h2>
             <table>
-                <tr><th>Region</th><th>API Name</th><th>Count</th></tr>
+                <tr>
+                    <th>Region</th>
+                    <th>API Name</th>
+                    <th>Source IP</th>
+                    <th>Count</th>
+                </tr>
     """
     
-    for region, apis in event_summary['api_counts'].items():
-        for api_name, count in apis.items():
-            email_content += f"""
-                <tr>
-                    <td>{region}</td>
-                    <td>{api_name}</td>
-                    <td>{count}</td>
-                </tr>
-            """
+    # Group and count events
+    event_counts = {}
+    for event in event_summary['events']:
+        key = (event['region'], event['api_name'], event['source_ip'])
+        event_counts[key] = event_counts.get(key, 0) + 1
+
+    # Add rows to table
+    for (region, api_name, source_ip), count in sorted(event_counts.items()):
+        email_content += f"""
+            <tr>
+                <td>{region}</td>
+                <td>{api_name}</td>
+                <td>{source_ip}</td>
+                <td>{count}</td>
+            </tr>
+        """
     
     email_content += """
             </table>

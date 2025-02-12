@@ -17,12 +17,13 @@ This solution provides automated detection and response to exposed AWS access ke
    - Manages notification and remediation flow
 
 3. **Notification Lambda**
-   - Analyzes CloudTrail for key usage
+   - Analyzes CloudTrail for access key usage for last 1 day
    - Generates AI-powered incident summary using Claude 3 Sonnet
    - Sends detailed HTML email notifications
 
 4. **Remediation Lambda**
    - Automatically disables compromised access keys
+   - Automatically add a Deny All policy on IAM user
    - Sends confirmation emails
    - Provides audit trail of actions taken
 
@@ -35,7 +36,7 @@ This solution provides automated detection and response to exposed AWS access ke
 - Comprehensive audit trail
 
 ## Prerequisites
-1. **AWS Account Requirements**
+1. **AWS Account Requirements (us-east-1 region)**
    - AWS CLI configured with appropriate permissions
    - Amazon SES configured and out of sandbox mode
    - Verified email addresses for notifications
@@ -45,7 +46,7 @@ This solution provides automated detection and response to exposed AWS access ke
    - Verify sender email address in SES
    - Verify recipient email address (if in SES sandbox)
 
-## Deployment Instructions
+## Deployment Instructions (Deployment to be done in us-east-1 region)
 
 ### 1. Clone the Repository
 ```
@@ -69,6 +70,7 @@ Create a parameters.json file:
 ```
 aws cloudformation deploy \
   --template-file template.yaml \
+  --region us-east-1 \
   --stack-name access-key-exposure-handler \
   --parameter-overrides file://parameters.json \
   --capabilities CAPABILITY_IAM
@@ -105,19 +107,51 @@ Both Lambda functions send HTML-formatted emails:
 ### 1. Test Event Template
 ```
 {
-  "source": "aws.health",
+  "version": "0",
+  "id": "5b53b920-3e7c-6003-589a",
   "detail-type": "AWS Health Event",
+  "source": "aws.health",
+  "account": "1234567890",
+  "time": "2025-02-12T00:38:36Z",
+  "region": "us-east-1",
+  "resources": [
+    "AKIAXXXXXXXXXX"
+  ],
   "detail": {
+    "eventArn": "arn:aws:health:us-east-1::event/RISK/AWS_RISK_CREDENTIALS_EXPOSED/AWS_RISK_CREDENTIALS_EXPOSED-DVNePcpQ2o",
     "service": "RISK",
     "eventTypeCode": "AWS_RISK_CREDENTIALS_EXPOSED",
-    "additionalDetails": {
-      "AccessKeyId": "AKIAXXXXXXXXXXXXXXXXX"
+    "eventTypeCategory": "issue",
+    "eventScopeCode": "ACCOUNT_SPECIFIC",
+    "communicationId": "acf0ec863d311e61f725cc6ba09b94d9798e78869a17",
+    "startTime": "Wed, 12 Feb 2025 00:37:54 GMT",
+    "endTime": "Wed, 26 Feb 2025 00:37:54 GMT",
+    "lastUpdatedTime": "Wed, 12 Feb 2025 00:37:55 GMT",
+    "statusCode": "open",
+    "eventRegion": "us-east-1",
+    "eventDescription": [
+      {
+        "language": "en_US",
+        "latestDescription": "Your AWS Account may be compromised! We have opened a Support Case with more details. Please visit the AWS Support Center https://aws.amazon.com/support to review the case we've opened for you and take action immediately."
+      }
+    ],
+    "eventMetadata": {
+      "notifcationdateplusfour": "2025-02-17",
+      "accountId": "1234567890",
+      "publicKey": "AKIAXXXXXXXXXX",
+      "userName": "test-1",
+      "exposedUrl": "https://github.com/repository_name",
+      "truncated": "false"
     },
     "affectedEntities": [
       {
-        "entityValue": "arn:aws:iam::123456789012:user/test-user"
+        "entityValue": "AKIAXXXXXXXXXX",
+        "lastUpdatedTime": "Wed, 12 Feb 2025 00:37:55 GMT"
       }
-    ]
+    ],
+    "affectedAccount": "AKIAXXXXXXXXXX",
+    "page": "1",
+    "totalPages": "1"
   }
 }
 ```
