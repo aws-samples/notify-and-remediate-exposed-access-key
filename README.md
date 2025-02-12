@@ -111,7 +111,7 @@ Both Lambda functions send HTML-formatted emails:
     "service": "RISK",
     "eventTypeCode": "AWS_RISK_CREDENTIALS_EXPOSED",
     "additionalDetails": {
-      "AccessKeyId": "AKIAXXXXXXXXXXXXXXXX"
+      "AccessKeyId": "AKIAXXXXXXXXXXXXXXXXX"
     },
     "affectedEntities": [
       {
@@ -152,4 +152,3 @@ Both Lambda functions send HTML-formatted emails:
 2. Create feature branch
 3. Submit pull request
 4. Follow coding standard
-
