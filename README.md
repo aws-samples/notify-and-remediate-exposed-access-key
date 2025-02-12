@@ -69,7 +69,7 @@ Create a parameters.json file:
 ### 3. Deploy Using AWS CLI
 ```
 aws cloudformation deploy \
-  --template-file template.yaml \
+  --template-file exposed_access_key_notification_and_remediation.yaml \
   --region us-east-1 \
   --stack-name access-key-exposure-handler \
   --parameter-overrides file://parameters.json \
